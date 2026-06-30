@@ -23,7 +23,6 @@ let db = null;
 let firebaseReady = false;
 let rtdbAvailable = false;
 let unsubscribeTodos = null;
-let seedingInProgress = false;
 
 const PRIORITY_STYLES = {
   high: "bg-red-100 text-red-600",
@@ -49,6 +48,7 @@ const els = {
   filterNav: document.getElementById("filter-nav"),
   searchInput: document.getElementById("search-input"),
   addBtn: document.getElementById("add-btn"),
+  listScroll: document.getElementById("list-scroll"),
   listView: document.getElementById("list-view"),
   completedView: document.getElementById("completed-view"),
   completedList: document.getElementById("completed-list"),
@@ -315,47 +315,6 @@ async function migrateLegacyLocalStorageToRtdb() {
   }
 }
 
-async function seedRtdbSampleData() {
-  if (!db || seedingInProgress) return false;
-
-  seedingInProgress = true;
-  try {
-    const snapshot = await get(ref(db, "todos"));
-    const data = snapshot.val();
-    if (data && typeof data === "object" && Object.keys(data).length > 0) {
-      return false;
-    }
-
-    const samples = getSampleTodos();
-    for (const todo of samples) {
-      const newRef = push(ref(db, "todos"));
-      await set(
-        newRef,
-        buildRtdbPayload(
-          {
-            title: todo.title,
-            startDate: todo.startDate,
-            endDate: todo.endDate,
-            startTime: todo.startTime,
-            endTime: todo.endTime,
-            priority: todo.priority,
-            category: todo.category,
-            memo: todo.memo,
-          },
-          { completed: false, isNew: true }
-        )
-      );
-    }
-    console.info(`[Dashboard] 테스트 데이터 ${samples.length}건을 Realtime Database에 추가했습니다.`);
-    return true;
-  } catch (err) {
-    console.error("[Dashboard] RTDB 테스트 데이터 추가 실패:", err);
-    return false;
-  } finally {
-    seedingInProgress = false;
-  }
-}
-
 function subscribeTodosFromRtdb() {
   if (!db) return;
 
@@ -410,7 +369,6 @@ async function initFirebase() {
 
     firebaseReady = true;
     await migrateLegacyLocalStorageToRtdb();
-    await seedRtdbSampleData();
     subscribeTodosFromRtdb();
     updateConnectionStatus();
   } catch (err) {
@@ -486,118 +444,6 @@ async function saveTodoToFirebase(data) {
   } finally {
     if (saveBtn) saveBtn.disabled = false;
   }
-}
-
-function getSampleTodos() {
-  const t = todayKey();
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tk = formatDateKey(tomorrow.getFullYear(), tomorrow.getMonth(), tomorrow.getDate());
-
-  return [
-    {
-      id: "1",
-      title: "메모장 기능 추가",
-      startDate: t,
-      endDate: t,
-      startTime: "",
-      endTime: "",
-      priority: "medium",
-      category: "personal",
-      memo: "",
-      completed: false,
-    },
-    {
-      id: "2",
-      title: "제출 전 오타 확인하기",
-      startDate: t,
-      endDate: addDaysFromKey(t, 3),
-      startTime: "20:00",
-      endTime: "16:19",
-      priority: "medium",
-      category: "study",
-      memo: "",
-      completed: false,
-    },
-    {
-      id: "3",
-      title: "모바일 반응형 점검하기",
-      startDate: t,
-      endDate: t,
-      startTime: "10:00",
-      endTime: "11:30",
-      priority: "high",
-      category: "work",
-      memo: "",
-      completed: false,
-    },
-    {
-      id: "4",
-      title: "Firebase 연동 테스트",
-      startDate: tk,
-      endDate: tk,
-      startTime: "",
-      endTime: "",
-      priority: "low",
-      category: "work",
-      memo: "",
-      completed: false,
-    },
-    {
-      id: "5",
-      title: "프로젝트 발표 준비",
-      startDate: t,
-      endDate: tk,
-      startTime: "",
-      endTime: "",
-      priority: "high",
-      category: "study",
-      memo: "",
-      completed: false,
-    },
-    {
-      id: "6",
-      title: "메모만 있는 할 일",
-      startDate: "",
-      endDate: "",
-      startTime: "",
-      endTime: "",
-      priority: "",
-      category: "",
-      memo: "메모 내용만 있는 할 일입니다.",
-      completed: false,
-    },
-    {
-      id: "7",
-      title: "캘린더 보기 확인하기",
-      startDate: t,
-      endDate: addDaysFromKey(t, 2),
-      startTime: "04:30",
-      endTime: "18:00",
-      priority: "high",
-      category: "study",
-      memo: "날짜별 할 일이 표시되는지 확인",
-      completed: false,
-    },
-    {
-      id: "8",
-      title: "Todo 기능 구현하기",
-      startDate: t,
-      endDate: t,
-      startTime: "14:00",
-      endTime: "18:00",
-      priority: "high",
-      category: "study",
-      memo: "",
-      completed: false,
-    },
-  ];
-}
-
-function addDaysFromKey(dateKey, days) {
-  const d = new Date(`${dateKey}T12:00:00`);
-  d.setDate(d.getDate() + days);
-  return formatDateKey(d.getFullYear(), d.getMonth(), d.getDate());
 }
 
 function scheduleIconSpan(icon, label) {
@@ -731,20 +577,44 @@ function updateStats() {
 function renderList() {
   if (!els.listView) return;
 
+  const emptyHtml = `
+      <div class="text-center py-16 text-slate-400 border border-dashed border-slate-200 rounded-2xl">
+        <span class="material-symbols-outlined text-4xl mb-2">inbox</span>
+        <p class="text-sm font-medium">표시할 할 일이 없습니다</p>
+      </div>`;
+
+  if (currentFilter === "completed") {
+    const completedItems = getFilteredTodos();
+    els.listView.innerHTML = "";
+    if (completedItems.length === 0) {
+      els.listView.innerHTML = emptyHtml;
+    } else {
+      completedItems.forEach((todo) => els.listView.appendChild(createTaskCard(todo)));
+    }
+    els.completedView?.classList.add("hidden");
+    return;
+  }
+
   const active = getFilteredTodos().filter((t) => !t.completed);
+  const q = (els.searchInput?.value || "").trim().toLowerCase();
   let completed = todos.filter((t) => t.completed);
   if (currentCategory) {
     completed = completed.filter((t) => t.category === currentCategory);
+  }
+  if (q) {
+    completed = completed.filter(
+      (t) =>
+        t.title.toLowerCase().includes(q) ||
+        (t.memo || "").toLowerCase().includes(q)
+    );
   }
 
   els.listView.innerHTML = "";
 
   if (active.length === 0) {
-    els.listView.innerHTML = `
-      <div class="text-center py-16 text-slate-400 border border-dashed border-slate-200 rounded-2xl">
-        <span class="material-symbols-outlined text-4xl mb-2">inbox</span>
-        <p class="text-sm font-medium">표시할 할 일이 없습니다</p>
-      </div>`;
+    if (!(completed.length > 0 && currentFilter === "all")) {
+      els.listView.innerHTML = emptyHtml;
+    }
   } else {
     active.forEach((todo) => els.listView.appendChild(createTaskCard(todo)));
   }
@@ -1290,20 +1160,6 @@ function getDayViewTimeHtml(todo) {
   return html;
 }
 
-function getDatesBetween(startDate, endDate) {
-  if (!startDate) return [];
-  const end = endDate || startDate;
-  const dates = [];
-  const cur = parseDateKey(startDate);
-  const last = parseDateKey(end);
-  if (!cur || !last) return [startDate];
-  while (cur <= last) {
-    dates.push(formatDateKey(cur.getFullYear(), cur.getMonth(), cur.getDate()));
-    cur.setDate(cur.getDate() + 1);
-  }
-  return dates;
-}
-
 function createDayScheduleRow(todo, { isLast = false } = {}) {
   const priority = todo.priority || "medium";
   const theme = DAY_CARD_THEME[priority] || DAY_CARD_THEME.medium;
@@ -1508,10 +1364,6 @@ function applyTimelineBarContent(bar, segment, dateKey) {
   bar.title = todo.title;
 }
 
-function attachTimelineBarDeleteBtn(bar, todo) {
-  attachHoverDeleteBtn(bar, todo, "timeline-gantt-bar-delete");
-}
-
 function createTimelineHourVLines(container) {
   for (let h = 0; h <= TIMELINE_HOURS; h++) {
     const line = document.createElement("div");
@@ -1532,7 +1384,7 @@ function createTimelineGanttBar(segment, dateKey) {
   bar.style.width = `${minutesToWidthPx(widthMin)}px`;
 
   applyTimelineBarContent(bar, segment, dateKey);
-  attachTimelineBarDeleteBtn(bar, todo);
+  attachHoverDeleteBtn(bar, todo, "timeline-gantt-bar-delete");
   bar.addEventListener("click", (e) => {
     if (e.target.closest(".timeline-gantt-bar-delete")) return;
     openModal(todo.id);
@@ -1787,14 +1639,6 @@ function renderTimelineCalendar(items) {
   });
 }
 
-function renderCalendarPlaceholder(message) {
-  if (!els.calendarGrid) return;
-  els.weekDayHeaders?.classList.add("hidden");
-  if (els.calendarTitle) els.calendarTitle.textContent = formatDateCompact(calAnchorKey);
-  els.calendarGrid.innerHTML = `
-    <div class="flex items-center justify-center min-h-[200px] text-sm text-slate-400 font-medium">${escapeHtml(message)}</div>`;
-}
-
 function getCalendarTodos() {
   return getFilteredTodos().filter((t) => t.startDate);
 }
@@ -1844,7 +1688,6 @@ function renderCalendar() {
   else if (calMode === "month") renderMonthCalendar(items);
   else if (calMode === "day") renderDayCalendar(items);
   else if (calMode === "timeline") renderTimelineCalendar(items);
-  else renderCalendarPlaceholder("표시할 보기가 없습니다.");
 }
 
 function render() {
@@ -1859,8 +1702,8 @@ function render() {
 function setView(view) {
   currentView = view;
   const listActive = view === "list";
-  els.listView?.classList.toggle("hidden", !listActive);
-  els.completedView?.classList.toggle("hidden", !listActive);
+  els.listScroll?.classList.toggle("hidden", !listActive);
+  if (!listActive) els.completedView?.classList.add("hidden");
   els.calendarView?.classList.toggle("hidden", listActive);
 
   els.viewListBtn?.classList.toggle("bg-white", listActive);
