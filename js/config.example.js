@@ -5,6 +5,16 @@
  *   copy js\config.example.js js\config.js (Windows)
  *
  * Firebase Console > 프로젝트 설정 > 일반 > 내 앱
+ *
+ * | config.js 필드   | Firebase Console 표기      |
+ * |------------------|----------------------------|
+ * | apiKey           | API 키                     |
+ * | authDomain       | 도메인 (*.firebaseapp.com) |
+ * | databaseURL      | Realtime Database URL      |
+ * | projectId        | 프로젝트 ID                |
+ * | storageBucket    | 스토리지 버킷              |
+ * | messagingSenderId| 메시지 송신자 ID           |
+ * | appId            | 앱 ID                      |
  */
 export const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
