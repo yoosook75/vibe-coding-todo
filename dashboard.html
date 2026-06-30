@@ -1,0 +1,1363 @@
+<!doctype html>
+<html lang="ko" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>할일 목록 (Todo List)</title>
+    <link rel="icon" href="img/favicon.png" type="image/png" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <style>
+      .material-symbols-outlined {
+        font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+        vertical-align: middle;
+        line-height: 1;
+        display: inline-block;
+        -webkit-font-smoothing: antialiased;
+      }
+      /* Google Fonts 기본 font-size:24px 덮어쓰기 */
+      .material-symbols-outlined.icon-sm {
+        font-size: 14px !important;
+        font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+      }
+      .material-symbols-outlined.icon-md {
+        font-size: 16px !important;
+        font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+      }
+      .material-symbols-outlined.icon-lg {
+        font-size: 18px !important;
+        font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+      }
+
+      /* ── Calendar scroll (mobile) ── */
+      :root {
+        --cal-col-min: 120px;
+        --cal-grid-min: calc(7 * var(--cal-col-min));
+      }
+      #calendar-scroll-wrap {
+        flex: 1;
+        min-height: 0;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+      }
+      #calendar-scroll-wrap.cal-scroll-week {
+        overflow: auto;
+      }
+      #calendar-scroll-wrap.cal-scroll-month,
+      #calendar-scroll-wrap.cal-scroll-day {
+        overflow: auto;
+      }
+      #calendar-scroll-wrap.cal-scroll-timeline {
+        overflow: hidden;
+      }
+      #calendar-scroll-wrap::-webkit-scrollbar {
+        height: 6px;
+        width: 6px;
+      }
+      #calendar-scroll-wrap::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      #calendar-scroll-inner {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        height: 100%;
+      }
+      #calendar-scroll-inner.cal-min-week,
+      #calendar-scroll-inner.cal-min-month {
+        min-width: var(--cal-grid-min);
+      }
+      #calendar-scroll-inner.cal-min-week,
+      #calendar-scroll-inner.cal-min-month,
+      #calendar-scroll-inner.cal-min-day {
+        height: auto;
+        min-height: 100%;
+        flex: 1 1 auto;
+      }
+      #calendar-scroll-inner.cal-min-day {
+        min-width: 400px;
+      }
+      #calendar-scroll-wrap.cal-scroll-month #week-day-headers {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #fff;
+      }
+      #calendar-scroll-inner.cal-min-timeline {
+        min-width: 0;
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        flex: 1;
+      }
+      #week-day-headers {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(var(--cal-col-min), 1fr));
+      }
+
+      /* ── Calendar (week / month) ── */
+      .cal-week {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(7, minmax(var(--cal-col-min), 1fr));
+        grid-template-rows: 1fr;
+        min-height: 220px;
+        width: 100%;
+      }
+      .cal-week.cal-week-fill {
+        align-items: stretch;
+        flex: 1;
+      }
+      .cal-week-fill .cal-day-cell {
+        min-height: 100%;
+        height: 100%;
+      }
+      #calendar-grid.cal-grid-week {
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+        padding: 0 0.75rem 0.75rem;
+        overflow: visible;
+        flex: 1 1 auto;
+      }
+      #week-day-headers.cal-week-headers-inset {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+      }
+      #calendar-grid.cal-grid-week .cal-week-fill {
+        flex: 1;
+        min-height: 100%;
+      }
+      #calendar-grid.cal-grid-week .week-event-card {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        padding: 0.65rem 1.6rem 0.65rem 0.85rem;
+        border-radius: 0.75rem;
+        border-left-width: 1px;
+        margin: 0;
+        overflow: hidden;
+        box-shadow: none;
+      }
+      #calendar-grid.cal-grid-week .week-event-card .day-schedule-cat {
+        display: flex;
+        width: 100%;
+        min-width: 0;
+        margin-bottom: 0.2rem;
+        flex-shrink: 0;
+      }
+      #calendar-grid.cal-grid-week .week-event-card .day-schedule-title {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        flex-shrink: 0;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #calendar-grid.cal-grid-week .week-event-card .day-schedule-memo {
+        display: block;
+        width: 100%;
+        min-width: 0;
+        flex-shrink: 0;
+        margin-top: 0.2rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #calendar-grid.cal-grid-week .week-event-card.bar-single {
+        border-radius: 0.75rem;
+      }
+      #calendar-grid.cal-grid-week .week-event-card.bar-start {
+        border-top-left-radius: 0.75rem;
+        border-bottom-left-radius: 0.75rem;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+      #calendar-grid.cal-grid-week .week-event-card.bar-end {
+        border-top-right-radius: 0.75rem;
+        border-bottom-right-radius: 0.75rem;
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+      }
+      #calendar-grid.cal-grid-week .week-event-card.bar-middle {
+        border-radius: 0;
+      }
+      #calendar-grid.cal-grid-week .week-event-card:hover {
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+      }
+      #calendar-grid.cal-grid-week .week-event-card.done {
+        opacity: 0.6;
+      }
+      #calendar-grid.cal-grid-week .week-event-card.done .day-schedule-title {
+        text-decoration: line-through;
+        color: #94a3b8;
+      }
+      #calendar-grid.cal-grid-week .week-event-card .day-schedule-delete {
+        position: absolute;
+        right: 8px;
+        top: 8px;
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        border: none;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.92);
+        color: #94a3b8;
+        cursor: pointer;
+        opacity: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 4;
+        transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+      }
+      #calendar-grid.cal-grid-week .week-event-card:hover .day-schedule-delete {
+        opacity: 1;
+      }
+      #calendar-grid.cal-grid-week .week-event-card .day-schedule-delete:hover {
+        color: #ef4444;
+        background: #fff;
+      }
+      #calendar-grid.cal-grid-week .week-event-card .day-schedule-delete .material-symbols-outlined {
+        font-size: 12px !important;
+        line-height: 1;
+        font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 20;
+      }
+      #calendar-grid.cal-grid-month {
+        display: block;
+        overflow: visible;
+        flex: none;
+        min-height: 0;
+        padding: 0;
+      }
+      .cal-month-weeks {
+        display: flex;
+        flex-direction: column;
+        flex: none;
+        min-width: var(--cal-grid-min);
+        width: 100%;
+        overflow: visible;
+        border-top: 1px solid #e2e8f0;
+      }
+      .cal-month-week {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(var(--cal-col-min), 1fr));
+        grid-template-rows: auto;
+        flex: none;
+        min-height: 108px;
+        overflow: visible;
+      }
+      .cal-month-day {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        min-height: 108px;
+        height: auto;
+        border-right: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+        background: #fff;
+        overflow: visible;
+      }
+      .cal-month-day:last-child {
+        border-right: none;
+      }
+      .cal-month-week:last-child .cal-month-day {
+        border-bottom: none;
+      }
+      .cal-month-day.other-month {
+        background: #f8fafc;
+      }
+      .cal-month-day-head {
+        flex-shrink: 0;
+        padding: 6px 8px 4px;
+        text-align: right;
+        font-size: 0.6875rem;
+        font-weight: 700;
+        color: #64748b;
+        line-height: 1;
+      }
+      .cal-month-day.other-month .cal-month-day-head {
+        color: #cbd5e1;
+      }
+      .cal-month-day.today .cal-month-day-head {
+        margin: 0;
+        padding: 5px 8px;
+        text-align: center;
+        background: #4f46e5;
+        color: #fff;
+      }
+      .cal-month-day-body {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 2px 6px 8px;
+        overflow: visible;
+      }
+      .cal-month-chip {
+        position: relative;
+        width: 100%;
+        box-sizing: border-box;
+        flex-shrink: 0;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        padding: 5px 1.25rem 5px 8px;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        line-height: 1.35;
+        text-align: left;
+        cursor: pointer;
+        transition: box-shadow 0.15s ease, opacity 0.15s ease;
+      }
+      .cal-month-chip-text {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cal-month-chip:hover {
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+      }
+      .cal-month-chip.priority-high {
+        background: #fff1f2;
+        color: #9f1239;
+        border-color: #fecdd3;
+      }
+      .cal-month-chip.priority-medium {
+        background: #eef2ff;
+        color: #3730a3;
+        border-color: #c7d2fe;
+      }
+      .cal-month-chip.priority-low {
+        background: #f8fafc;
+        color: #475569;
+        border-color: #e2e8f0;
+      }
+      .cal-month-chip.done {
+        opacity: 0.55;
+        text-decoration: line-through;
+      }
+      .cal-week-bg {
+        display: contents;
+      }
+      .cal-day-cell {
+        border-right: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
+        min-height: 120px;
+        background: #fff;
+      }
+      .cal-day-cell:last-child {
+        border-right: none;
+      }
+      .cal-event-bar {
+        position: absolute;
+        z-index: 2;
+        box-sizing: border-box;
+        min-height: 52px;
+        padding: 8px 1.25rem 7px 10px;
+        border: 1px solid transparent;
+        display: flex;
+        align-items: flex-start;
+        overflow: hidden;
+        cursor: pointer;
+        transition: box-shadow 0.15s ease, border-color 0.15s ease;
+      }
+      .cal-event-bar-delete,
+      .cal-month-chip-delete {
+        position: absolute;
+        right: 3px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        border: none;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.92);
+        color: #94a3b8;
+        cursor: pointer;
+        opacity: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 4;
+        transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+      }
+      .cal-event-bar:hover .cal-event-bar-delete,
+      .cal-month-chip:hover .cal-month-chip-delete {
+        opacity: 1;
+      }
+      .cal-event-bar-delete:hover,
+      .cal-month-chip-delete:hover {
+        color: #ef4444;
+        background: #fff;
+      }
+      .cal-event-bar-delete .material-symbols-outlined,
+      .cal-month-chip-delete .material-symbols-outlined {
+        font-size: 12px !important;
+        line-height: 1;
+        font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 20;
+      }
+      .cal-event-bar:hover {
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.07);
+      }
+      .cal-event-bar.bar-single,
+      .cal-event-bar.bar-start {
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+      }
+      .cal-event-bar.bar-single,
+      .cal-event-bar.bar-end {
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+      }
+      .cal-event-bar.priority-high {
+        background: #fff1f2;
+        color: #9f1239;
+        border-color: #fecdd3;
+      }
+      .cal-event-bar.priority-medium {
+        background: #eef2ff;
+        color: #3730a3;
+        border-color: #c7d2fe;
+      }
+      .cal-event-bar.priority-low {
+        background: #f8fafc;
+        color: #475569;
+        border-color: #e2e8f0;
+      }
+      .cal-event-bar.done {
+        opacity: 0.55;
+      }
+      .cal-event-time {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 10px;
+        font-weight: 400;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-top: 3px;
+        color: inherit;
+        opacity: 0.72;
+      }
+      .cal-event-time-text {
+        font-weight: 400;
+      }
+      .cal-event-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 6px;
+        min-width: 0;
+      }
+      .cal-event-title {
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+        flex: 1;
+        color: inherit;
+      }
+      .cal-event-cat {
+        font-size: 10px;
+        font-weight: 500;
+        flex-shrink: 0;
+        opacity: 0.8;
+      }
+      .cal-mode-btn.active {
+        background: #fff;
+        color: #4f46e5;
+        font-weight: 600;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+      }
+      #cal-mode-tabs-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        max-width: 100%;
+      }
+      #cal-mode-tabs-scroll::-webkit-scrollbar {
+        display: none;
+      }
+      #cal-mode-tabs .cal-mode-btn {
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+
+      /* ── Day / Timeline schedule ── */
+      .day-schedule-list {
+        display: flex;
+        flex-direction: column;
+      }
+      .day-schedule-row {
+        display: grid;
+        grid-template-columns: 7.5rem 1.25rem 1fr;
+        gap: 0 0.75rem;
+        min-height: 0;
+      }
+      .day-schedule-time {
+        padding-top: 0.85rem;
+        text-align: right;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #4f46e5;
+        line-height: 1.4;
+      }
+      .day-schedule-time-line {
+        display: block;
+        white-space: nowrap;
+      }
+      .day-schedule-rail {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 0.95rem;
+      }
+      .day-schedule-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 9999px;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 1px currentColor;
+        flex-shrink: 0;
+        z-index: 1;
+      }
+      .day-schedule-line {
+        width: 2px;
+        flex: 1;
+        min-height: 1rem;
+        background: #e2e8f0;
+        margin-top: 4px;
+      }
+      .day-schedule-card {
+        position: relative;
+        margin-bottom: 1rem;
+        padding: 0.9rem 1.75rem 0.9rem 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid transparent;
+        border-left-width: 4px;
+        cursor: pointer;
+        transition: box-shadow 0.15s ease, border-color 0.15s ease;
+      }
+      .day-schedule-delete {
+        position: absolute;
+        right: 8px;
+        top: 8px;
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        border: none;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.92);
+        color: #94a3b8;
+        cursor: pointer;
+        opacity: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2;
+        transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+      }
+      .day-schedule-card:hover .day-schedule-delete {
+        opacity: 1;
+      }
+      .day-schedule-delete:hover {
+        color: #ef4444;
+        background: #fff;
+      }
+      .day-schedule-delete .material-symbols-outlined {
+        font-size: 12px !important;
+        line-height: 1;
+        font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 20;
+      }
+      .day-schedule-card:hover {
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+      }
+      .day-schedule-card.done {
+        opacity: 0.6;
+      }
+      .day-schedule-card.done .day-schedule-title {
+        text-decoration: line-through;
+      }
+      .day-schedule-cat {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+      }
+      .day-schedule-cat-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        flex-shrink: 0;
+      }
+      .day-schedule-title {
+        font-size: 0.9375rem;
+        font-weight: 700;
+        color: #1e293b;
+        line-height: 1.35;
+      }
+      .day-schedule-memo {
+        margin-top: 0.35rem;
+        font-size: 0.8125rem;
+        color: #64748b;
+        line-height: 1.45;
+      }
+      .timeline-date-heading {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1e293b;
+        padding-bottom: 0.5rem;
+        margin: 1.25rem 0 0.75rem;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .timeline-date-heading:first-child {
+        margin-top: 0;
+      }
+
+      /* 일간 좌우 여백 */
+      #calendar-grid.cal-grid-inset {
+        box-sizing: border-box;
+        padding: 1.25rem clamp(1rem, 4vw, 6rem);
+        min-width: 360px;
+      }
+
+      /* ── 타임라인 (가로 Gantt) ── */
+      #calendar-grid.cal-grid-timeline {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        padding: 0;
+      }
+      .timeline-gantt {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+        min-width: 0;
+        width: 100%;
+        border-top: 1px solid #e2e8f0;
+        overflow: hidden;
+      }
+      .timeline-gantt-sidebar {
+        width: 11.5rem;
+        min-width: 11.5rem;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid #e2e8f0;
+        background: #fff;
+      }
+      .timeline-gantt-corner {
+        height: 40px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        padding: 0 0.875rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #64748b;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
+      }
+      .timeline-gantt-tasks-scroll {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-width: none;
+      }
+      .timeline-gantt-tasks-scroll::-webkit-scrollbar {
+        display: none;
+      }
+      .timeline-gantt-task-row {
+        height: 56px;
+        box-sizing: border-box;
+        padding: 0 0.875rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border-bottom: 1px solid #f1f5f9;
+      }
+      .timeline-gantt-task-title {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        line-height: 1.35;
+        color: #1e293b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .timeline-gantt-task-cat {
+        font-size: 0.6875rem;
+        font-weight: 400;
+        color: #94a3b8;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .timeline-gantt-main {
+        flex: 1;
+        min-width: 280px;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      .timeline-gantt-hours-scroll {
+        flex-shrink: 0;
+        overflow: hidden;
+        border-bottom: 1px solid #e2e8f0;
+        background: #fff;
+      }
+      .timeline-gantt-hours {
+        display: flex;
+        height: 40px;
+        position: relative;
+      }
+      .timeline-gantt-hour {
+        width: 64px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.6875rem;
+        font-weight: 400;
+        color: #94a3b8;
+        border-right: 1px solid #f1f5f9;
+        box-sizing: border-box;
+      }
+      .timeline-gantt-tracks-scroll {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+      }
+      .timeline-gantt-tracks-scroll::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      .timeline-gantt-tracks-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      .timeline-gantt-tasks-inner {
+        min-height: 100%;
+      }
+      .timeline-gantt-task-row-empty {
+        pointer-events: none;
+      }
+      .timeline-gantt-tracks-inner {
+        position: relative;
+        min-height: 100%;
+      }
+      .timeline-gantt-track-row {
+        position: relative;
+        height: 56px;
+        border-bottom: 1px solid #f1f5f9;
+      }
+      .timeline-gantt-hour-vline {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: #f1f5f9;
+        pointer-events: none;
+      }
+      .timeline-gantt-bar {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 30px;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        padding: 0 1.25rem 0 0.5rem;
+        box-sizing: border-box;
+        cursor: pointer;
+        z-index: 2;
+        overflow: hidden;
+        transition: box-shadow 0.15s ease;
+      }
+      .timeline-gantt-bar-body {
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .timeline-gantt-bar-delete {
+        position: absolute;
+        right: 3px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        padding: 0;
+        border: none;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.92);
+        color: #94a3b8;
+        cursor: pointer;
+        opacity: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        z-index: 4;
+        transition: opacity 0.15s ease, color 0.15s ease, background 0.15s ease;
+      }
+      .timeline-gantt-bar:hover .timeline-gantt-bar-delete {
+        opacity: 1;
+      }
+      .timeline-gantt-bar-delete:hover {
+        color: #ef4444;
+        background: #fff;
+      }
+      .timeline-gantt-bar-delete .material-symbols-outlined {
+        font-size: 12px !important;
+        line-height: 1;
+        font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 20;
+      }
+      .timeline-gantt-bar:hover {
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+      }
+      .timeline-gantt-bar.priority-high {
+        background: #fff1f2;
+        border: 1px solid #fecdd3;
+        color: #9f1239;
+      }
+      .timeline-gantt-bar.priority-medium {
+        background: #eef2ff;
+        border: 1px solid #c7d2fe;
+        color: #3730a3;
+      }
+      .timeline-gantt-bar.priority-low {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #475569;
+      }
+      .timeline-gantt-bar-time {
+        font-size: 0.6875rem;
+        font-weight: 400;
+        white-space: nowrap;
+      }
+      .timeline-gantt-bar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.375rem;
+        width: 100%;
+        min-width: 0;
+      }
+      .timeline-gantt-bar-time-end {
+        color: #2563eb;
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+      .timeline-gantt-bar-ended {
+        opacity: 0.72;
+      }
+      .timeline-gantt-bar-ended.priority-high,
+      .timeline-gantt-bar-ended.priority-medium,
+      .timeline-gantt-bar-ended.priority-low {
+        background: #f8fafc;
+        border-color: #e2e8f0;
+        color: #94a3b8;
+      }
+      .timeline-gantt-bar-status {
+        color: #94a3b8;
+        font-weight: 400;
+      }
+      .timeline-gantt-bar.done {
+        opacity: 0.55;
+      }
+      .timeline-gantt-now {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #ef4444;
+        z-index: 5;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 font-sans text-slate-900 overflow-hidden h-full flex m-0">
+    <div class="flex h-full w-full overflow-hidden">
+      <!-- Sidebar -->
+      <aside
+        id="sidebar"
+        class="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 z-10 hidden sm:flex"
+      >
+        <a
+          href="dashboard.html"
+          class="p-6 flex items-center space-x-3 hover:bg-slate-50 transition-colors"
+          style="text-decoration: none"
+          aria-label="대시보드로 이동"
+        >
+          <img
+            src="img/logo.png"
+            alt="TaskMaster"
+            class="w-8 h-8 shrink-0 object-contain"
+            width="32"
+            height="32"
+          />
+          <span class="font-bold text-lg tracking-tight text-slate-900">TaskMaster</span>
+        </a>
+
+        <nav class="flex-1 px-4 space-y-1" id="filter-nav">
+          <button
+            class="filter-btn w-full flex items-center justify-between px-3 py-2 bg-indigo-50 text-indigo-700 rounded-lg font-medium transition-colors"
+            data-filter="all"
+          >
+            <div class="flex items-center">
+              <span class="material-symbols-outlined w-5 h-5 mr-3 text-[20px]">dashboard</span>전체
+            </div>
+          </button>
+          <button
+            class="filter-btn w-full flex items-center justify-between px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors font-medium"
+            data-filter="today"
+          >
+            <div class="flex items-center">
+              <span class="material-symbols-outlined w-5 h-5 mr-3 text-[20px]">today</span>오늘
+            </div>
+            <span
+              class="text-xs font-semibold bg-slate-100 px-2 py-0.5 rounded-full text-slate-500"
+              id="nav-badge-today"
+              >0</span
+            >
+          </button>
+          <button
+            class="filter-btn w-full flex items-center justify-between px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors font-medium"
+            data-filter="upcoming"
+          >
+            <div class="flex items-center text-orange-600">
+              <span class="material-symbols-outlined w-5 h-5 mr-3 text-[20px]">event_upcoming</span>예정
+            </div>
+          </button>
+          <button
+            class="filter-btn w-full flex items-center justify-between px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors font-medium"
+            data-filter="important"
+          >
+            <div class="flex items-center text-red-500">
+              <span class="material-symbols-outlined w-5 h-5 mr-3 text-[20px]">priority_high</span>중요
+            </div>
+          </button>
+          <button
+            class="filter-btn w-full flex items-center justify-between px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors font-medium"
+            data-filter="completed"
+          >
+            <div class="flex items-center text-emerald-500">
+              <span class="material-symbols-outlined w-5 h-5 mr-3 text-[20px]">done_all</span>완료
+            </div>
+          </button>
+
+          <div class="pt-8 pb-2 px-3">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Projects</span>
+          </div>
+          <button
+            type="button"
+            class="category-btn w-full flex items-center px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium transition-colors"
+            data-category="work"
+          >
+            <span class="w-2 h-2 rounded-full bg-blue-500 mr-4"></span> 업무
+          </button>
+          <button
+            type="button"
+            class="category-btn w-full flex items-center px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium transition-colors"
+            data-category="personal"
+          >
+            <span class="w-2 h-2 rounded-full bg-emerald-500 mr-4"></span> 개인
+          </button>
+          <button
+            type="button"
+            class="category-btn w-full flex items-center px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg font-medium transition-colors"
+            data-category="study"
+          >
+            <span class="w-2 h-2 rounded-full bg-amber-500 mr-4"></span> 공부
+          </button>
+        </nav>
+
+        <div class="p-4 border-t border-slate-200">
+          <div class="flex items-center space-x-3 bg-slate-50 p-2 rounded-xl">
+            <div
+              class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-700 shrink-0"
+            >
+              ME
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-slate-900 truncate">관리자</p>
+              <p class="text-xs text-slate-500 truncate">Administrator</p>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="flex-1 flex flex-col bg-white overflow-hidden min-w-0 relative">
+        <header
+          class="h-16 border-b border-slate-200 px-4 sm:px-8 flex items-center justify-between shrink-0 bg-white"
+        >
+          <div class="flex items-center gap-4">
+            <button
+              type="button"
+              id="menu-btn"
+              class="sm:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg"
+              aria-label="메뉴"
+            >
+              <span class="material-symbols-outlined">menu</span>
+            </button>
+            <h1 class="text-xl font-bold text-slate-800 hidden sm:block">My Dashboard</h1>
+          </div>
+
+          <div class="flex items-center space-x-3 sm:space-x-4">
+            <span id="connection-status" class="hidden sm:flex items-center text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-600" title="연결 상태">
+              <span class="inline-block w-2 h-2 rounded-full bg-slate-400 mr-1.5"></span>연결 중…
+            </span>
+            <div class="relative hidden sm:block">
+              <input
+                type="text"
+                id="search-input"
+                placeholder="Quick search..."
+                class="bg-slate-100 border-transparent focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 rounded-full py-1.5 pl-10 pr-4 text-sm w-48 lg:w-64 transition-all outline-none"
+              />
+              <span
+                class="material-symbols-outlined text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 text-[18px] pointer-events-none"
+                >search</span
+              >
+            </div>
+            <button
+              type="button"
+              id="add-btn"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 sm:px-4 py-1.5 rounded-lg text-sm font-semibold flex items-center transition-colors shadow-sm whitespace-nowrap"
+            >
+              <span class="material-symbols-outlined w-4 h-4 mr-1 text-[18px]">add</span>
+              New Task
+            </button>
+          </div>
+        </header>
+
+        <div class="flex-1 min-h-0 p-4 sm:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 overflow-hidden">
+          <div class="lg:col-span-8 flex flex-col min-h-0">
+            <div class="flex items-center justify-between mb-6 shrink-0">
+              <h2 class="text-base font-bold text-slate-800">진행중인 할 일</h2>
+              <div class="flex bg-slate-100 p-1 rounded-lg">
+                <button
+                  type="button"
+                  id="view-list-btn"
+                  class="px-3 py-1.5 text-xs font-semibold bg-white shadow-sm text-indigo-600 rounded-md transition-all"
+                >
+                  리스트
+                </button>
+                <button
+                  type="button"
+                  id="view-calendar-btn"
+                  class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:bg-slate-50 rounded-md transition-all"
+                >
+                  캘린더
+                </button>
+              </div>
+            </div>
+
+            <div id="task-panel-body" class="flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div id="list-view" class="space-y-3 flex-1 overflow-y-auto pr-1"></div>
+
+              <div id="completed-view" class="pt-6 mt-4 opacity-70 hidden">
+                <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">
+                  Recently Completed
+                </h2>
+                <div id="completed-list" class="space-y-3"></div>
+              </div>
+
+              <div id="calendar-view" class="hidden flex-1 min-h-0 flex flex-col">
+                <div
+                  class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex-1 min-h-0 flex flex-col"
+                >
+                  <div class="p-3 sm:p-4 border-b border-slate-100 flex flex-col gap-2 shrink-0">
+                    <div class="relative flex items-center justify-center w-full min-h-[2.25rem]">
+                      <div class="absolute left-0 z-10 flex items-center gap-2">
+                        <button
+                          type="button"
+                          id="cal-prev"
+                          class="p-1.5 bg-slate-50 rounded text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors shrink-0"
+                        >
+                          <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                        </button>
+                        <button
+                          type="button"
+                          id="cal-next"
+                          class="p-1.5 bg-slate-50 rounded text-slate-600 hover:bg-slate-100 border border-slate-200 transition-colors shrink-0"
+                        >
+                          <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                        </button>
+                      </div>
+                      <h2
+                        id="calendar-title"
+                        class="text-sm sm:text-base font-bold text-slate-800 text-center px-[4.75rem] min-w-0 max-w-full truncate"
+                      ></h2>
+                    </div>
+                    <div id="cal-mode-tabs-scroll" class="w-full">
+                      <div class="flex bg-slate-100 p-1 rounded-lg w-max mx-auto" id="cal-mode-tabs">
+                        <button type="button" data-cal-mode="month" class="cal-mode-btn px-2 sm:px-2.5 py-1 text-xs font-medium text-slate-500 rounded transition-all">월간</button>
+                        <button type="button" data-cal-mode="week" class="cal-mode-btn active px-2 sm:px-2.5 py-1 text-xs font-medium text-slate-500 rounded transition-all">주간</button>
+                        <button type="button" data-cal-mode="day" class="cal-mode-btn px-2 sm:px-2.5 py-1 text-xs font-medium text-slate-500 rounded transition-all">일간</button>
+                        <button type="button" data-cal-mode="timeline" class="cal-mode-btn px-2 sm:px-2.5 py-1 text-xs font-medium text-slate-500 rounded transition-all">타임라인</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="calendar-scroll-wrap" class="flex-1 min-h-0">
+                    <div id="calendar-scroll-inner" class="flex flex-col flex-1 min-h-0 h-full">
+                      <div
+                        id="week-day-headers"
+                        class="border-b border-slate-100 text-center shrink-0"
+                      ></div>
+                      <div id="calendar-grid" class="relative flex-1 min-h-0"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-4 space-y-6">
+            <div class="bg-indigo-600 rounded-2xl p-6 text-white shadow-lg shadow-indigo-200/50">
+              <p class="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-2">진행률</p>
+              <div class="flex items-end justify-between mb-4">
+                <h3 class="text-3xl font-bold" id="stat-total-percent">0%</h3>
+                <p class="text-sm opacity-90">
+                  전체 <span id="stat-total">0</span>개 중 <span id="stat-completed">0</span>개 완료
+                </p>
+              </div>
+              <div class="h-2 bg-indigo-500/50 rounded-full overflow-hidden backdrop-blur-sm">
+                <div
+                  id="stat-progress-bar"
+                  class="h-full bg-white rounded-full transition-all duration-500 ease-out"
+                  style="width: 0%"
+                ></div>
+              </div>
+              <button
+                type="button"
+                id="stat-view-completed-btn"
+                class="mt-6 w-full py-2.5 bg-indigo-500/40 hover:bg-indigo-500/60 border border-indigo-400/30 rounded-xl text-sm font-semibold transition-all"
+              >
+                완료 목록 보기
+              </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                data-filter="today"
+                class="stat-card-btn bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col justify-center text-left transition-all hover:border-indigo-200"
+              >
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">오늘 할 일</p>
+                <p class="text-2xl font-bold text-slate-800" id="stat-today">0</p>
+              </button>
+              <button
+                type="button"
+                data-filter="important"
+                class="stat-card-btn bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col justify-center text-left transition-all hover:border-indigo-200"
+              >
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">중요</p>
+                <p class="text-2xl font-bold text-slate-800" id="stat-important">0</p>
+              </button>
+              <button
+                type="button"
+                data-filter="deadline"
+                class="stat-card-btn bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col justify-center text-left col-span-2 transition-all hover:border-red-200 group"
+              >
+                <p
+                  class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 group-hover:text-red-400 transition-colors"
+                >
+                  마감 임박
+                </p>
+                <p class="text-2xl font-bold text-red-500" id="stat-deadline">0</p>
+              </button>
+            </div>
+
+            <div class="bg-amber-50 border border-amber-100 rounded-2xl p-5 shadow-sm">
+              <div class="flex items-start">
+                <div class="p-2.5 bg-amber-100/70 rounded-xl mr-4 shrink-0">
+                  <span class="material-symbols-outlined text-amber-600">lightbulb</span>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-amber-900">생산성 팁</p>
+                  <p class="text-xs text-amber-800/80 leading-relaxed mt-1.5 font-medium">
+                    집중이 필요한 할 일에는 뽀모도로 기법을 써 보세요. 25분 집중하고 5분 쉬기를 반복하면 효율이 올라갑니다.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Mobile sidebar overlay -->
+    <div id="sidebar-backdrop" class="hidden fixed inset-0 bg-slate-900/40 z-20 sm:hidden"></div>
+
+    <!-- Modal -->
+    <div
+      id="todo-modal"
+      class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4"
+    >
+      <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden border border-slate-200">
+        <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center">
+          <h2 id="modal-title" class="text-lg font-bold text-slate-800">새로운 할 일</h2>
+          <button
+            type="button"
+            id="close-modal-btn"
+            class="text-slate-400 hover:text-slate-600 hover:bg-slate-50 p-1.5 rounded-lg transition-colors"
+          >
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
+        </div>
+
+        <form id="todo-form">
+          <div class="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
+            <div class="space-y-1.5">
+              <label class="text-xs font-bold text-slate-500 uppercase tracking-wider" for="input-title">제목</label>
+              <input
+                type="text"
+                id="input-title"
+                placeholder="무엇을 해야 하나요?"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all text-slate-900 placeholder:text-slate-400 font-medium"
+                required
+              />
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider" for="input-start-date"
+                  >시작일</label
+                >
+                <input
+                  type="date"
+                  id="input-start-date"
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all text-slate-700 text-sm"
+                  required
+                />
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider" for="input-end-date"
+                  >종료일</label
+                >
+                <input
+                  type="date"
+                  id="input-end-date"
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all text-slate-700 text-sm"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider" for="input-start-time"
+                  >시작 시간</label
+                >
+                <input
+                  type="time"
+                  id="input-start-time"
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all text-slate-700 text-sm"
+                />
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider" for="input-end-time"
+                  >종료 시간</label
+                >
+                <input
+                  type="time"
+                  id="input-end-time"
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all text-slate-700 text-sm"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider" for="input-priority"
+                  >우선순위</label
+                >
+                <select
+                  id="input-priority"
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all text-slate-700 text-sm bg-white"
+                >
+                  <option value="low">낮음 (Low)</option>
+                  <option value="medium" selected>보통 (Medium)</option>
+                  <option value="high">높음 (High)</option>
+                </select>
+              </div>
+              <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wider" for="input-category"
+                  >프로젝트</label
+                >
+                <select
+                  id="input-category"
+                  class="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all text-slate-700 text-sm bg-white"
+                >
+                  <option value="personal" selected>개인</option>
+                  <option value="work">업무</option>
+                  <option value="study">공부</option>
+                  <option value="other">기타</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-xs font-bold text-slate-500 uppercase tracking-wider" for="input-memo">상세 내용</label>
+              <textarea
+                id="input-memo"
+                placeholder="추가적인 메모나 상세 내용을 입력하세요..."
+                rows="3"
+                class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 outline-none transition-all text-slate-700 text-sm resize-none"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="px-6 py-4 bg-slate-50 flex justify-end gap-3 border-t border-slate-100">
+            <button
+              type="button"
+              id="cancel-modal-btn"
+              class="px-5 py-2 rounded-lg font-medium text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-colors text-sm"
+            >
+              취소
+            </button>
+            <button
+              type="submit"
+              class="px-5 py-2 rounded-lg font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200 text-sm flex items-center gap-2"
+            >
+              <span class="material-symbols-outlined text-[16px]">check</span>
+              저장
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script type="module" src="js/dashboard.js"></script>
+  </body>
+</html>

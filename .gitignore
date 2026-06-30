@@ -1,0 +1,23 @@
+# Firebase 등 민감한 설정 (js/config.example.js 를 복사해 사용)
+js/config.js
+
+# 환경 변수
+.env
+.env.*
+!.env.example
+
+# OS / 에디터
+# 의존성 / 로컬 백업
+node_modules/
+backup/
+package-lock.json
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+
+# 로그
+*.log
+npm-debug.log*
