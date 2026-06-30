@@ -1,7 +1,14 @@
 /* ── Calendar scroll (mobile) ── */
 :root {
-  --cal-col-min: 120px;
+  --cal-col-min: 180px;
   --cal-grid-min: calc(7 * var(--cal-col-min));
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --cal-col-min: 136px;
+    --cal-grid-min: calc(7 * var(--cal-col-min));
+  }
 }
 #calendar-scroll-wrap {
   flex: 1;
@@ -48,7 +55,7 @@
   flex: 1 1 auto;
 }
 #calendar-scroll-inner.cal-min-day {
-  min-width: 400px;
+  min-width: 480px;
 }
 #calendar-scroll-wrap.cal-scroll-month #week-day-headers {
   position: sticky;
@@ -864,4 +871,87 @@
   background: #ef4444;
   z-index: 5;
   pointer-events: none;
+}
+
+/* ── Mobile / tablet: page scroll (not nested traps) ── */
+@media (max-width: 1023px) {
+  #main-content-scroll {
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  #main-task-column.task-active {
+    flex: none;
+    min-height: 0;
+  }
+
+  #task-panel-body.task-active {
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  #list-scroll.list-active {
+    flex: none;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  #calendar-view.calendar-active {
+    flex: none;
+    min-height: 0;
+  }
+
+  #calendar-view.calendar-active > div {
+    min-height: 0;
+    overflow: visible;
+  }
+
+  #calendar-view.calendar-active #calendar-scroll-wrap {
+    flex: none;
+    min-height: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  #calendar-view.calendar-active #calendar-scroll-wrap.cal-scroll-week,
+  #calendar-view.calendar-active #calendar-scroll-wrap.cal-scroll-month,
+  #calendar-view.calendar-active #calendar-scroll-wrap.cal-scroll-day {
+    overflow-y: visible;
+  }
+
+  #calendar-view.calendar-active #calendar-scroll-inner,
+  #calendar-view.calendar-active #calendar-scroll-inner.cal-min-week,
+  #calendar-view.calendar-active #calendar-scroll-inner.cal-min-month,
+  #calendar-view.calendar-active #calendar-scroll-inner.cal-min-day {
+    height: auto;
+    min-height: 0;
+    flex: none;
+  }
+
+  #calendar-view.calendar-active #calendar-scroll-wrap.cal-scroll-timeline {
+    overflow: hidden;
+    min-height: min(68vh, 560px);
+  }
+
+  #calendar-view.calendar-active #calendar-scroll-inner.cal-min-timeline {
+    height: 100%;
+    min-height: min(68vh, 560px);
+    flex: 1;
+  }
+
+  .cal-week {
+    min-height: 340px;
+  }
+
+  .cal-month-week,
+  .cal-month-day {
+    min-height: 140px;
+  }
+
+  #stats-panel {
+    flex: none;
+  }
 }

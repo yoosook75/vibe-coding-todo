@@ -86,6 +86,9 @@ const els = {
   navBadgeToday: document.getElementById("nav-badge-today"),
   connectionStatus: document.getElementById("connection-status"),
   statViewCompletedBtn: document.getElementById("stat-view-completed-btn"),
+  statsPanel: document.getElementById("stats-panel"),
+  mainTaskColumn: document.getElementById("main-task-column"),
+  taskPanelBody: document.getElementById("task-panel-body"),
 };
 
 const CATEGORY_LABELS_KO = { study: "공부", work: "업무", personal: "개인", other: "기타" };
@@ -925,6 +928,7 @@ function renderWeekDayHeaders(week) {
 }
 
 function getWeekCalendarViewportHeight() {
+  if (isMobileSidebarLayout()) return 0;
   const wrap = els.calendarScrollWrap;
   if (!wrap) return els.calendarGrid?.clientHeight ?? 0;
   const headers = els.weekDayHeaders;
@@ -1699,6 +1703,24 @@ function render() {
   }
 }
 
+function updateLayoutForView() {
+  const calendarActive = currentView === "calendar";
+  const listActive = currentView === "list";
+  const compactLayout = isMobileSidebarLayout();
+
+  els.mainTaskColumn?.classList.toggle("task-active", compactLayout);
+  els.taskPanelBody?.classList.toggle("task-active", compactLayout);
+  els.listScroll?.classList.toggle("list-active", listActive && compactLayout);
+  els.calendarView?.classList.toggle("calendar-active", calendarActive && compactLayout);
+
+  if (calendarActive && calMode === "week") {
+    requestAnimationFrame(() => {
+      const weekEl = els.calendarGrid?.querySelector(".cal-week-fill");
+      if (weekEl) syncWeekCalendarLayout(weekEl, Number(weekEl.dataset.lanes) || 1);
+    });
+  }
+}
+
 function setView(view) {
   currentView = view;
   const listActive = view === "list";
@@ -1719,6 +1741,8 @@ function setView(view) {
   els.viewCalendarBtn?.classList.toggle("font-semibold", !listActive);
   els.viewCalendarBtn?.classList.toggle("text-slate-500", listActive);
   els.viewCalendarBtn?.classList.toggle("font-medium", listActive);
+
+  updateLayoutForView();
 
   if (listActive) clearTimelineNowTimer();
   render();
@@ -1858,6 +1882,7 @@ els.sidebarBackdrop?.addEventListener("click", closeMobileSidebar);
 
 window.matchMedia("(max-width: 1023px)").addEventListener("change", (e) => {
   if (!e.matches) closeMobileSidebar();
+  updateLayoutForView();
 });
 
 els.filterNav?.addEventListener("click", (e) => {
