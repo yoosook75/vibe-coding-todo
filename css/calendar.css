@@ -99,6 +99,11 @@
   padding: 0 0.75rem 0.75rem;
   overflow: visible;
   flex: 1 1 auto;
+  min-width: var(--cal-grid-min);
+  width: 100%;
+}
+#calendar-grid.cal-grid-week .cal-week {
+  min-width: var(--cal-grid-min);
 }
 #week-day-headers.cal-week-headers-inset {
   padding-left: 0.75rem;
@@ -949,6 +954,10 @@
   .cal-month-week,
   .cal-month-day {
     min-height: 140px;
+  }
+
+  #calendar-grid.cal-grid-week .week-event-card {
+    padding: 0.5rem 1.1rem 0.5rem 0.65rem;
   }
 
   #stats-panel {

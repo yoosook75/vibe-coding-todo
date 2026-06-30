@@ -845,12 +845,11 @@ function assignEventLanes(segments) {
 
 function applySegmentPosition(el, segment, laneStep = CAL_LANE_HEIGHT, barHeight = CAL_BAR_HEIGHT) {
   const { colStart, colEnd, lane } = segment;
-  const colSpan = colEnd - colStart;
-  const leftPct = ((colStart - 1) / 7) * 100;
-  const widthPct = (colSpan / 7) * 100;
   const margin = CAL_EVENT_H_MARGIN;
-  el.style.left = `calc(${leftPct}% + ${margin}px)`;
-  el.style.width = `calc(${widthPct}% - ${margin * 2}px)`;
+  el.style.gridColumn = `${colStart} / ${colEnd}`;
+  el.style.left = `${margin}px`;
+  el.style.right = `${margin}px`;
+  el.style.width = "auto";
   el.style.top = `${CAL_WEEK_DAY_HEADER + lane * laneStep}px`;
   el.style.height = `${barHeight}px`;
 }
