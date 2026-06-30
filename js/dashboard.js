@@ -1827,31 +1827,50 @@ function handleSubmit(e) {
   });
 }
 
+function closeMobileSidebar() {
+  els.sidebar?.classList.add("hidden");
+  els.sidebar?.classList.remove("flex", "fixed", "inset-y-0", "left-0", "z-30");
+  els.sidebarBackdrop?.classList.add("hidden");
+  els.sidebarBackdrop?.setAttribute("aria-hidden", "true");
+  els.menuBtn?.setAttribute("aria-expanded", "false");
+}
+
+function openMobileSidebar() {
+  els.sidebar?.classList.remove("hidden");
+  els.sidebar?.classList.add("flex", "fixed", "inset-y-0", "left-0", "z-30");
+  els.sidebarBackdrop?.classList.remove("hidden");
+  els.sidebarBackdrop?.setAttribute("aria-hidden", "false");
+  els.menuBtn?.setAttribute("aria-expanded", "true");
+}
+
+function isMobileSidebarLayout() {
+  return window.matchMedia("(max-width: 1023px)").matches;
+}
+
 // Events
 els.menuBtn?.addEventListener("click", () => {
-  els.sidebar?.classList.toggle("hidden");
-  els.sidebar?.classList.toggle("flex");
-  els.sidebar?.classList.toggle("fixed");
-  els.sidebar?.classList.toggle("inset-y-0");
-  els.sidebar?.classList.toggle("left-0");
-  els.sidebarBackdrop?.classList.toggle("hidden");
+  const isOpen = els.sidebar?.classList.contains("fixed");
+  if (isOpen) closeMobileSidebar();
+  else openMobileSidebar();
 });
 
-els.sidebarBackdrop?.addEventListener("click", () => {
-  els.sidebar?.classList.add("hidden");
-  els.sidebar?.classList.remove("flex", "fixed", "inset-y-0", "left-0");
-  els.sidebarBackdrop?.classList.add("hidden");
+els.sidebarBackdrop?.addEventListener("click", closeMobileSidebar);
+
+window.matchMedia("(max-width: 1023px)").addEventListener("change", (e) => {
+  if (!e.matches) closeMobileSidebar();
 });
 
 els.filterNav?.addEventListener("click", (e) => {
   const filterBtn = e.target.closest(".filter-btn");
   if (filterBtn?.dataset.filter) {
     setFilter(filterBtn.dataset.filter);
+    if (isMobileSidebarLayout()) closeMobileSidebar();
     return;
   }
   const catBtn = e.target.closest(".category-btn");
   if (catBtn?.dataset.category) {
     setCategory(catBtn.dataset.category);
+    if (isMobileSidebarLayout()) closeMobileSidebar();
   }
 });
 
